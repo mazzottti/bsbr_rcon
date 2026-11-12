@@ -1,6 +1,6 @@
 # bsbr_scum — documentação
 
-**Versão 0.5.4.** Tudo que dá para executar neste servidor: os **233 comandos
+**Versão 0.5.5.** Tudo que dá para executar neste servidor: os **233 comandos
 de administração do SCUM** e os **20 comandos do mod**.
 
 Se é a primeira vez: [orientacoes/conectar.md](orientacoes/conectar.md) ensina a

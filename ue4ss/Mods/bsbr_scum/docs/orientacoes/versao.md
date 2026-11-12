@@ -1,6 +1,6 @@
 # Versão do mod
 
-A versão atual é **0.5.4**. Ela pode ser lida de três formas, e as três sempre
+A versão atual é **0.5.5**. Ela pode ser lida de três formas, e as três sempre
 concordam, porque o número nasce num lugar só no código e é carimbado nos três
 na hora de compilar.
 
@@ -17,7 +17,7 @@ version
 ```
 
 ```
-bsbr_scum 0.5.4
+bsbr_scum 0.5.5
 portas source=28015 linha=27100
 opcoes elevate=1 split_replies=0 echo=0 perf_log=0
 ```
@@ -28,7 +28,7 @@ momento. A senha nunca aparece.
 Para um gerenciador externo, é uma chamada igual a qualquer outra:
 
 ```python
-versao = client.send_command("version").splitlines()[0]   # "bsbr_scum 0.5.4"
+versao = client.send_command("version").splitlines()[0]   # "bsbr_scum 0.5.5"
 ```
 
 ## Com o servidor parado
@@ -40,7 +40,7 @@ ue4ss\Mods\bsbr_scum\version.txt
 ```
 
 ```
-bsbr_scum 0.5.4
+bsbr_scum 0.5.5
 carregado 2026-10-15 00:31:04
 ```
 
@@ -66,10 +66,32 @@ binário está rodando atrapalha mais do que ajuda, então a versão fica fora d
 
 ---
 
+## O que mudou na 0.5.5
+
+`zona_criar` **recusa a zona que invadiria outra**. Ainda **em teste**:
+compila, a recusa não foi exercitada no servidor.
+
+- Antes de enviar qualquer coisa, o círculo pedido é comparado com **todas as
+  outras regiões** da lista (do editor ou de outro `id`). Se a distância entre
+  os centros for menor que a soma dos raios, nada é criado:
+  `erro: a zona invadiria "<nome da regiao>" (distancia entre centros <d> m, minimo <m> m); nada criado`
+- Encostar exatamente é permitido. Com várias invadidas, a resposta cita a de
+  maior invasão.
+- Vale também para **atualizar** um `id` que já existe: mover ou aumentar a
+  zona para dentro de outra é recusado e a zona antiga fica como estava. A
+  região do próprio `id` não conta na comparação.
+- Região com tamanho menor que 1 cm (sobra de teste) não cobre nada e não
+  bloqueia. Região retangular entra com um raio que a cobre com folga.
+- Custo: uma distância por região existente, só quando o comando roda.
+- Os outros comandos e respostas não mudaram.
+- Ver [comandos/mod.md](../comandos/mod.md#zona_listar-zona_criar-zona_remover--zonas-personalizadas-em-teste).
+
 ## O que mudou na 0.5.4
 
-Zona com **título**, separado do `id`. Ainda **em teste**: compila, não foi
-exercitada no servidor.
+Zona com **título**, separado do `id`. **Validado no servidor de
+desenvolvimento em 11/11/2026**: zona criada com título acentuado, o aviso de
+entrada do jogo mostra o título, e a linha no `SCUM.db` saiu correta. O resto
+da lista abaixo segue **em teste**.
 
 - **`zona_criar <id> <x> <y> <raio_cm> <configuracao> <titulo>`**: o sexto
   dado é novo e obrigatório. O jogo mostra o nome da região na tela de quem

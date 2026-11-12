@@ -407,11 +407,13 @@ evento com `DestroyAllBrennersWithinRadius 2000`.
 
 **Em teste.** `zona_listar`, `zona_criar` e `zona_remover` foram exercitados
 no servidor de desenvolvimento em 11/11/2026 (0.5.2), com um admin online, na
-forma antiga (sem título). O que veio depois compila, mas ainda **não foi
-exercitado no servidor**: a cópia em arquivo da 0.5.3 (`zonas.cache`,
-`origem=arquivo`, `zona_esquecer`) e o **id separado do título** da 0.5.4
-(`zonas.ids`, acento no título). Teste primeiro num servidor de
-desenvolvimento, com cópia do `SCUM.db`.
+forma antiga (sem título). O **id separado do título** da 0.5.4 foi validado
+no mesmo dia: zona criada com título acentuado, o aviso de entrada do jogo
+mostra o título, e a linha no `SCUM.db` saiu correta. O resto compila, mas
+ainda **não foi exercitado no servidor**: a cópia em arquivo da 0.5.3
+(`zonas.cache`, `origem=arquivo`, `zona_esquecer`) e a **recusa por invasão**
+da 0.5.5. Teste primeiro num servidor de desenvolvimento, com cópia do
+`SCUM.db`.
 
 ```
 zona_listar
@@ -627,6 +629,32 @@ responde o uso e não faz nada.
   editor fala com o servidor (o do `as`, ou um admin conectado, ou qualquer
   jogador). O jogo pode recusar o salvamento vindo de quem não é admin.
 
+**A zona não pode invadir outra (0.5.5).** Antes de enviar qualquer coisa, o
+mod compara o círculo pedido com todas as outras regiões da lista, do editor
+ou de outro `id`:
+
+- Invade quando a distância entre os centros é **menor** que a soma dos raios.
+  Encostar exatamente é permitido.
+- A recusa é uma linha, e nada é criado nem alterado:
+
+  ```
+  erro: a zona invadiria "Posto B2" (distancia entre centros 412 m, minimo 900 m); nada criado
+  ```
+
+  Metros inteiros: a distância arredondada para baixo, o mínimo (soma dos
+  raios) para cima. O nome é o da região invadida, como no `zona_listar` (sem
+  `;` e numa linha só). Com várias invadidas, sai a de maior invasão.
+- Vale também ao **atualizar** um `id`: mover ou aumentar a zona para dentro
+  de outra é recusado, e a zona antiga fica como estava. A região do próprio
+  `id` não entra na comparação.
+- Raio de cada região existente: `tam_x` quando `tam_y` é 0 ou igual a
+  `tam_x` (círculo do editor e posto avançado padrão). Nos outros casos
+  (retângulo) vale `raiz(tam_x² + tam_y²)`, que cobre a região com folga; a
+  coluna `forma` não é usada, porque vem 0 também nos círculos.
+- Região com raio menor que 1 cm não cobre nada e não bloqueia (sobra de
+  teste com tamanho 0).
+- Não precisa de jogador conectado para ser recusada: a comparação vem antes.
+
 ```
 ok zona evento_42 criada (titulo "Arena do Brenner", configuracao Evento PVE, indice 1, raio 60000 cm)
 ok zona evento_42 atualizada (titulo "Arena do Brenner", configuracao Evento PVP, indice 2, raio 30000 cm)
@@ -675,6 +703,7 @@ Toda recusa é uma linha começando com `erro:`, e **nada é enviado ao jogo**
 | `x` ou `y` além de 10000000 cm | `erro: x ou y fora do mapa (limite de 10000000 cm para cada lado)` |
 | Raio fora de 100 a 1500000 | `erro: raio_cm fora da faixa de 100 a 1500000` |
 | Configuração que não existe | `erro: configuracao "X" nao existe` |
+| O círculo entraria em outra região (do editor ou de outro `id`) | `erro: a zona invadiria "<nome da regiao>" (distancia entre centros <d> m, minimo <m> m); nada criado` |
 | Nenhum jogador conectado | `erro: nenhum jogador conectado para emprestar o canal RPC; nada enviado` |
 | Mais de 256 regiões no servidor | `erro: o servidor ja tem 256 regioes, o limite do mod; nada enviado` |
 | O jogo mudou a assinatura das funções de zona (patch) | `erro: o gancho de zona disparou (...) mas o conjunto nao foi copiado (ver UE4SS.log)` |
@@ -688,7 +717,8 @@ no mapa do jogo. O motivo detalhado fica no `UE4SS.log`, em linhas
 
 Nada por tick. Por salvamento no editor, até duas cópias do conjunto de zonas
 (uma, depois do primeiro `multicast`). Por `zona_criar` ou `zona_remover`, uma
-cópia do conjunto e uma chamada ao jogo. `zona_listar` só percorre a cópia.
+cópia do conjunto e uma chamada ao jogo; o `zona_criar` faz antes uma conta de
+distância por região existente. `zona_listar` só percorre a cópia.
 O `zonas.cache` custa uma gravação pequena a cada salvamento de zonas que o
 servidor aplica (raro) e uma leitura quando o servidor sobe. O `zonas.ids`,
 uma gravação menor ainda por `zona_criar` ou `zona_remover` que mudou algo, e
