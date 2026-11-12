@@ -1,6 +1,6 @@
 # Versão do mod
 
-A versão atual é **0.5.5**. Ela pode ser lida de três formas, e as três sempre
+A versão atual é **0.6.0**. Ela pode ser lida de três formas, e as três sempre
 concordam, porque o número nasce num lugar só no código e é carimbado nos três
 na hora de compilar.
 
@@ -17,9 +17,9 @@ version
 ```
 
 ```
-bsbr_scum 0.5.5
+bsbr_scum 0.6.0
 portas source=28015 linha=27100
-opcoes elevate=1 split_replies=0 echo=0 perf_log=0
+opcoes elevate=1 split_replies=0 echo=0 utf8=1 perf_log=0
 ```
 
 É a resposta mais confiável, porque vem do binário que está carregado naquele
@@ -28,7 +28,7 @@ momento. A senha nunca aparece.
 Para um gerenciador externo, é uma chamada igual a qualquer outra:
 
 ```python
-versao = client.send_command("version").splitlines()[0]   # "bsbr_scum 0.5.5"
+versao = client.send_command("version").splitlines()[0]   # "bsbr_scum 0.6.0"
 ```
 
 ## Com o servidor parado
@@ -40,7 +40,7 @@ ue4ss\Mods\bsbr_scum\version.txt
 ```
 
 ```
-bsbr_scum 0.5.5
+bsbr_scum 0.6.0
 carregado 2026-10-15 00:31:04
 ```
 
@@ -65,6 +65,16 @@ sumiria quando o arquivo fosse regravado. Um número que mente sobre qual
 binário está rodando atrapalha mais do que ajuda, então a versão fica fora dele.
 
 ---
+
+## O que mudou na 0.6.0
+
+- **As respostas do mod saem em UTF-8**, nas duas portas. Antes ia um byte
+  por caractere (Latin-1), e nome com acento chegava quebrado em quem lê
+  UTF-8. Agora os dois sentidos concordam: o mod lê UTF-8 (desde a 0.5.4) e
+  responde UTF-8. Texto sem acento é idêntico ao de antes.
+- **Quem precisar do formato antigo:** `[api] utf8 = 0` no `config.ini`.
+- A linha `opcoes` do comando `version` ganhou `utf8=1`.
+- A recusa de zona que invadiria outra (0.5.5) foi validada no servidor.
 
 ## O que mudou na 0.5.5
 

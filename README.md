@@ -92,6 +92,63 @@ O histórico do que mudou em cada versão está em
 e a lista dos comandos em
 [`ue4ss/Mods/bsbr_scum/docs/README.md`](ue4ss/Mods/bsbr_scum/docs/README.md).
 
+## Para quem integra
+
+### Codificação: UTF-8 a partir da 0.6.0
+
+| Versão do mod | Comando que você envia | Resposta que você recebe |
+| --- | --- | --- |
+| até 0.5.3 | um byte por caractere | Latin-1, um byte por caractere |
+| 0.5.4 e 0.5.5 | **UTF-8** | Latin-1, um byte por caractere |
+| **0.6.0 em diante** | **UTF-8** | **UTF-8** |
+
+Texto só com ASCII é idêntico em todas as versões; a diferença aparece
+apenas onde há acento, por exemplo no nome de um jogador no `ListPlayers`.
+
+**Se o seu cliente lê respostas de versões anteriores à 0.6.0**, ajuste
+antes de atualizar:
+
+- decida pela versão, não por tentativa. A primeira linha do comando
+  `version` (`bsbr_scum 0.6.0`) é ASCII e legível nos dois formatos;
+- versão 0.6.0 ou maior: trate os bytes como UTF-8. Menor: como Latin-1
+  (ISO-8859-1);
+- quem convertia de Latin-1 para UTF-8 precisa parar de converter na 0.6.0,
+  ou o acento sai em dobro (`Ã§` no lugar de `ç`).
+
+Para manter o formato antigo num servidor, `utf8 = 0` na seção `[api]` do
+`config.ini`. A linha `opcoes` do comando `version` mostra o valor em
+vigor (`utf8=1` ou `utf8=0`).
+
+### Atualização automática
+
+Versão mais recente, em texto puro (`bsbr_scum 0.6.0`):
+
+```
+https://raw.githubusercontent.com/mazzottti/bsbr_rcon/main/ue4ss/Mods/bsbr_scum/version.txt
+```
+
+Pacote de uma versão (troque `0.6.0` pela versão lida acima):
+
+```
+https://github.com/mazzottti/bsbr_rcon/archive/refs/tags/v0.6.0.zip
+```
+
+O zip traz tudo sob a pasta `bsbr_rcon-0.6.0/`. Cada tag é imutável: o
+conteúdo de uma versão publicada nunca muda.
+
+Regras para instalar:
+
+- somente com o servidor **parado**;
+- copie `dwmapi.dll` e a pasta `ue4ss\` para `<servidor>\SCUM\Binaries\Win64\`;
+- **nunca sobrescreva** `ue4ss\Mods\bsbr_scum\config.ini` (tem a senha); o
+  pacote traz só o `config.exemplo.ini`;
+- não apague `zonas.cache`, `zonas.ids`, `logs\` nem `bsbr_scum.log`;
+- `UE4SS.dll` e `main.dll` são trocadas sempre juntas;
+- compare versões número a número (`0.5.10` é maior que `0.5.9`) e atualize
+  só se a disponível for maior;
+- consulte a versão no máximo uma vez por hora;
+- guarde a versão anterior para poder voltar se o servidor não subir.
+
 ## Licenças
 
 O mod `bsbr_scum` é proprietário. O UE4SS é distribuído sob a licença MIT,
