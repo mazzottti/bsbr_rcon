@@ -1,6 +1,6 @@
 # Versão do mod
 
-A versão atual é **0.8.0**. Ela pode ser lida de três formas, e as três sempre
+A versão atual é **0.8.1**. Ela pode ser lida de três formas, e as três sempre
 concordam, porque o número nasce num lugar só no código e é carimbado nos três
 na hora de compilar.
 
@@ -17,7 +17,7 @@ version
 ```
 
 ```
-bsbr_scum 0.8.0
+bsbr_scum 0.8.1
 portas source=28015 linha=27100
 opcoes elevate=1 split_replies=0 echo=0 utf8=1 perf_log=0 executor=jogo
 ```
@@ -28,7 +28,7 @@ momento. A senha nunca aparece.
 Para um gerenciador externo, é uma chamada igual a qualquer outra:
 
 ```python
-versao = client.send_command("version").splitlines()[0]   # "bsbr_scum 0.8.0"
+versao = client.send_command("version").splitlines()[0]   # "bsbr_scum 0.8.1"
 ```
 
 ## Com o servidor parado
@@ -40,7 +40,7 @@ ue4ss\Mods\bsbr_scum\version.txt
 ```
 
 ```
-bsbr_scum 0.8.0
+bsbr_scum 0.8.1
 carregado 2026-10-15 00:31:04
 ```
 
@@ -65,6 +65,29 @@ sumiria quando o arquivo fosse regravado. Um número que mente sobre qual
 binário está rodando atrapalha mais do que ajuda, então a versão fica fora dele.
 
 ---
+
+## O que mudou na 0.8.1
+
+**A medir no servidor** (ver "Desempenho" em `comandos/mod.md`).
+
+- **Otimização, sem comando novo e sem mudança de resposta.** Os comandos que
+  leem os mesmos campos de muitos veículos ou jogadores passaram a achar cada
+  campo **uma vez** depois da subida do servidor e a guardar o endereço dele,
+  em vez de procurá-lo pelo nome em cada veículo e em cada jogador. A posição
+  é lida direto do ator quando ele não está preso a outro (jogador montado
+  continua pelo caminho antigo).
+- Comandos que ficaram mais leves: `veiculos_listar`, `vehicles`,
+  `ListPlayers`, `players`, a recontagem e a busca do jogador mais perto do
+  `spawn_area`, e todo comando que procura um jogador pelo SteamID, perfil ou
+  nome (`as`, `SendChat`, `SendNotification`, `aviso`, `Location <SteamID>` e
+  os comandos do jogo).
+- **Respostas idênticas, byte a byte**: mesmo formato, mesma ordem, mesmo
+  arredondamento.
+- **Auto-verificação**: nas primeiras leituras depois da subida, cada campo é
+  lido pelos dois caminhos e comparado. Se algum divergir (por exemplo, depois
+  de um patch do jogo), o mod registra um erro no `UE4SS.log`
+  (`[bsbr_scum][campos]`) e aquele campo volta ao caminho antigo até o
+  reinício. As respostas continuam certas; só o ganho se perde.
 
 ## O que mudou na 0.8.0
 

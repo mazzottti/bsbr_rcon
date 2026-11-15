@@ -1364,13 +1364,25 @@ controller antes de injetar.
 
 | Comando | Custo |
 |---|---|
-| Comandos do jogo, `sudo`, `players`, `vehicles`, `get`, `set`, `call`, `DestroyAllBrennersWithinRadius` | Lista de atores — barato, pode ir para automação |
-| `veiculos_listar` | Lista de atores, sem gravar em arquivo — feito para laço de 30 s (mínimo 10 s); medido em 15/11/2026 por frota: 0,38 ms com 3 veículos, 0,91 ms com 26, 2,1 ms com 89, 4,0 ms com 199 |
+| Comandos do jogo, `sudo`, `get`, `set`, `call`, `DestroyAllBrennersWithinRadius` | Lista de atores — barato, pode ir para automação |
+| `players`, `vehicles`, `ListPlayers` **(otimizados na 0.8.1)** | Lista de atores, com os campos de cada jogador e veículo achados uma vez e guardados (ver abaixo). Custo novo: **a medir** |
+| `veiculos_listar` **(otimizado na 0.8.1)** | Lista de atores, sem gravar em arquivo — feito para laço de 30 s (mínimo 10 s); medido em 15/11/2026 por frota, na 0.8.0: 0,38 ms com 3 veículos, 0,91 ms com 26, 2,1 ms com 89, 4,0 ms com 199. Custo novo: **a medir** |
+| Recontagem do `spawn_area` **(otimizada na 0.8.1)** | Uma vez por segundo durante o trabalho: lista de atores do tipo, uma posição por ator. Custo novo: **a medir** |
 | `eventos` | Comando local, fora da thread do jogo. Sem novidade, uma comparação e uma linha; com novidade, uma cópia por linha devolvida. Sem arquivo — feito para laço de 1 a 2 s |
 | `eventos_teste <n>` | Comando local: `n` registros de uma vez; diagnóstico, não usar em operação |
 | `corpo <alvo>` | Um `controller_named` e até 64 efeitos lidos |
 | `zona_criar`, `zona_remover`, `zona_listar` | Uma cópia do conjunto de zonas e uma chamada ao jogo (`zona_listar` só lê a cópia); medido em 15/11/2026: 7,6 ms, 4,2 ms e 0,06 ms |
 | `find`, `search`, `inspect`, `object <nome parcial>` | Varredura completa — um engasgo de frame por chamada. Medido em 15/11/2026: `find`, `inspect` e `get object <nome>` custam **~1 s** na thread do jogo (o servidor para esse tempo). **Não usar com jogadores online** |
+
+**Campos guardados (0.8.1).** Os comandos marcados acima, e todo comando que
+procura um jogador pelo SteamID, perfil ou nome, deixaram de procurar cada
+campo pelo nome em cada veículo e em cada jogador: o campo é achado na
+primeira leitura depois da subida e o endereço fica guardado. A posição é
+lida direto do ator quando ele não está preso a outro (jogador montado segue
+pela chamada ao jogo). As respostas são as mesmas de antes, byte a byte. Nas
+primeiras leituras cada campo é conferido pelos dois caminhos; se divergir, o
+`UE4SS.log` mostra `[bsbr_scum][campos]` e aquele campo volta ao caminho
+antigo até o reinício.
 
 Medido em 15/11/2026: a **primeira** execução de cada tipo de comando do jogo
 depois da subida do servidor custa ~100 a 300 ms na thread do jogo (ex.: o

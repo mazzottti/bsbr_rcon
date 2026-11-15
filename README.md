@@ -132,19 +132,19 @@ vigor (`utf8=1` ou `utf8=0`).
 
 ### Atualização automática
 
-Versão mais recente, em texto puro (`bsbr_scum 0.8.0`):
+Versão mais recente, em texto puro (`bsbr_scum 0.8.1`):
 
 ```
 https://raw.githubusercontent.com/mazzottti/bsbr_rcon/main/ue4ss/Mods/bsbr_scum/version.txt
 ```
 
-Pacote de uma versão (troque `0.8.0` pela versão lida acima):
+Pacote de uma versão (troque `0.8.1` pela versão lida acima):
 
 ```
-https://github.com/mazzottti/bsbr_rcon/archive/refs/tags/v0.8.0.zip
+https://github.com/mazzottti/bsbr_rcon/archive/refs/tags/v0.8.1.zip
 ```
 
-O zip traz tudo sob a pasta `bsbr_rcon-0.8.0/`. Cada tag é imutável: o
+O zip traz tudo sob a pasta `bsbr_rcon-0.8.1/`. Cada tag é imutável: o
 conteúdo de uma versão publicada nunca muda.
 
 Regras para instalar:
