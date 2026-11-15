@@ -1,6 +1,6 @@
 # Versão do mod
 
-A versão atual é **0.6.0**. Ela pode ser lida de três formas, e as três sempre
+A versão atual é **0.7.0**. Ela pode ser lida de três formas, e as três sempre
 concordam, porque o número nasce num lugar só no código e é carimbado nos três
 na hora de compilar.
 
@@ -10,16 +10,16 @@ Voltar ao [índice](../README.md).
 
 ## Com o servidor no ar
 
-Pela porta Source RCON, ou pela porta de linha, ou pelo chat:
+Pela porta Source RCON ou pela porta de linha:
 
 ```
 version
 ```
 
 ```
-bsbr_scum 0.6.0
+bsbr_scum 0.7.0
 portas source=28015 linha=27100
-opcoes elevate=1 split_replies=0 echo=0 utf8=1 perf_log=0
+opcoes elevate=1 split_replies=0 echo=0 utf8=1 perf_log=0 executor=jogo
 ```
 
 É a resposta mais confiável, porque vem do binário que está carregado naquele
@@ -28,7 +28,7 @@ momento. A senha nunca aparece.
 Para um gerenciador externo, é uma chamada igual a qualquer outra:
 
 ```python
-versao = client.send_command("version").splitlines()[0]   # "bsbr_scum 0.6.0"
+versao = client.send_command("version").splitlines()[0]   # "bsbr_scum 0.7.0"
 ```
 
 ## Com o servidor parado
@@ -40,7 +40,7 @@ ue4ss\Mods\bsbr_scum\version.txt
 ```
 
 ```
-bsbr_scum 0.6.0
+bsbr_scum 0.7.0
 carregado 2026-10-15 00:31:04
 ```
 
@@ -65,6 +65,174 @@ sumiria quando o arquivo fosse regravado. Um número que mente sobre qual
 binário está rodando atrapalha mais do que ajuda, então a versão fica fora dele.
 
 ---
+
+## O que mudou na 0.7.0
+
+Estado final depois dos testes da build final no servidor de desenvolvimento
+em 15/11/2026. **Ainda não publicada**: quem está em produção usa a 0.6.0.
+
+**Validado:**
+
+- `veiculos_listar`: dono (perfil), SteamID do dono online e trancas; tranca
+  tirada e recolocada apareceu na leitura seguinte; 0,38 ms com 3 veículos e
+  0,91 ms com 26 (o `vehicles` deu 1,1 ms e 2,6 ms nas mesmas condições).
+- `eventos` e `npc_morto`: 41 NPCs armados mortos em 27 s, 41 recebidos,
+  0 perdidos; a confirmação esvaziou a fila. Na build final, 3 guardas mortos
+  na faca deram 3 eventos com arma `1H_Military_Survival_Knife` (o campo da
+  arma vale para arma de fogo e arma branca). Estresse: 161 milhões de
+  eventos de teste em 14,4 min, sem queda, sem erro e sem crescimento de
+  memória.
+- `jogador_morto` com as causas `zumbi` (4 mortes), `animal` (javali
+  mutante) e `queda` (duas quedas de 320 m, sem atacante); `jogador_renasceu`.
+- **Morte duplicada corrigida e validada**: com o jogador 30 s na tela de
+  morte, saiu um `jogador_morto` (16:43:41, `queda`) e o `jogador_renasceu`
+  (16:44:11), sem `jogador_morto` extra (o gatilho disparou 2 vezes, 1
+  evento); a morte seguinte do mesmo jogador (16:44:55) saiu normalmente.
+- `zona_criar` sem recusa de invasão: zona criada exatamente sobre o Outpost
+  B4 respondeu `ok ... criada`; atualizar, remover e remover de novo
+  responderam `ok ... atualizada`, `ok ... removida` e `ok ... nao existia`;
+  título com acento funcionou. Custo: `zona_criar` 7,6 ms, `zona_remover`
+  4,2 ms, `zona_listar` 0,06 ms.
+- Comandos de mundo na thread do jogo: `version` mostra `executor=jogo`;
+  comandos do jogo de níveis 2, 3 e 4 (`SetGodMode`, `SetImmortality`,
+  `SendNotification`) funcionaram pela porta, conferidos pelo efeito no
+  personagem; `SpawnBrenner` com `as` e `DestroyAllBrennersWithinRadius`
+  funcionaram. `erro: thread do jogo nao respondeu` nunca apareceu em uso
+  normal; apareceu uma vez com o servidor a ~5 FPS por causa de 87 veículos
+  inválidos.
+- `anuncio`, `aviso` e as cores.
+
+**Não validado** (instalado, nunca exercitado): `sentinela_destruida`,
+`razor_morto`, `nave_destruida`; `animal_morto` (não dispara para animal
+criado por comando: 0 disparos com 8 abates; não testado com animal do
+próprio jogo); a causa do zumbi kamikaze depois do ajuste (hoje
+`desconhecida`); as causas por robô (sentinela), Razor, Brenner, NPC, outro
+jogador, fome, sede e frio; `aviso` com dois jogadores online; o `nome` do
+`veiculos_listar` com veículo nomeado; veículo aquático; qual regra o jogo
+aplica dentro de zonas sobrepostas. Sem validação registrada:
+`eventos_capturar`, `morte_teste`, `sonda_funcoes` e `corpo`.
+
+- **Mudança incompatível: o `logs/npc_kills.log` deixou de existir.** O mod
+  não cria mais a pasta `logs` nem escreve o arquivo. A morte de NPC armado
+  por jogador sai como evento `npc_morto` na fila em memória, com os mesmos
+  dados. Quem lia o arquivo tem de passar a chamar `eventos`.
+- **`eventos [<ultimo>]`**, comando novo: busca a fila de acontecimentos em
+  memória (4096 registros) depois de `<ultimo>` e descarta até ele.
+  Cabeçalho `eventos: <n> epoca=<epoca> ultimo=<seq> perdidos=<p> mais=<0|1>`
+  e uma linha `<seq>;<hora>;<tipo>;<campos...>` por evento, até 500 por
+  resposta. Feito para o painel chamar a cada 1 ou 2 s pela porta Source; não
+  grava nada em arquivo.
+- **`eventos_teste <n>`**, diagnóstico: põe `n` eventos falsos (1 a 20000) na
+  fila, para teste de carga.
+- **Mais mortes na fila**: `jogador_morto` com a causa deduzida pelo mod e
+  as classes cruas (atacante, pawn, arma, ameaça a até 150 m, efeitos do
+  corpo), `jogador_renasceu` (SteamID, perfil, nome e posição),
+  `sentinela_destruida`, `razor_morto`, `nave_destruida` e `animal_morto`,
+  estes na mesma linha do `npc_morto`. Em 15/11/2026 o `jogador_morto`
+  (`ConZPlayerController:Server_RequestRespawnWaitTime`) e o
+  `jogador_renasceu` (`Prisoner:Server_RespawnAtCommonSpawnLocation`) foram
+  validados; a posição do renascimento é a do local da morte. O cliente chama
+  o gatilho do `jogador_morto` uma vez na morte e outra no renascimento; a
+  proteção contra repetição é por estado (uma morte por vida; o renascimento
+  libera a próxima; aviso de morte até 5 s depois do renascimento é
+  ignorado), não mais só 5 s, que deixava sair um `jogador_morto` falso
+  quando o jogador esperava na tela de morte (corrigido e **validado** em
+  15/11/2026). Limitações: mod subindo com o jogador já na tela de morte
+  perde essa morte; morrer de novo menos de 5 s depois de renascer não gera
+  evento. Causas validadas: `zumbi`, `animal`, `queda`. Causas sem atacante:
+  `explosao`/`sentinela` (queimadura), `queda` (desmaio; medida em duas
+  quedas), `sangramento` (só o efeito `Bleeding` exato), `frio`, `calor`,
+  senão `desconhecida` (o zumbi kamikaze sai assim). `sentinela_destruida`,
+  `razor_morto` e `nave_destruida` são candidatos nunca exercitados;
+  `animal_morto` é candidato que não disparou com animal criado por comando e
+  não foi testado com animal do próprio jogo. **`zumbi_morto` foi
+  removido**: o jogo não tem função que dispare no abate; zumbi e animal
+  mortos por jogador se contam pelo `SCUM.db`. Ver
+  [comandos/mod.md](../comandos/mod.md#tipos-novos-de-morte).
+- **`eventos_capturar [padrao|tudo|tipo,tipo,...] [minutos]`**, comando novo
+  (local): escolhe quais mortes entram na fila; fora de `padrao`, volta
+  sozinho ao `padrao` depois dos minutos (1 a 720, padrão 120).
+- **`morte_teste <alvo>`** e **`sonda_funcoes <classe> <segundos>|ler`**,
+  diagnóstico: um `jogador_morto` de um jogador vivo para conferir os campos,
+  e uma sonda de funções de uma classe com ganchos removíveis (não é para
+  produção).
+- **Comandos da porta Source não vão mais para o `bsbr_scum.log`**: nem a
+  linha do comando, nem a resposta, nem o eco no UE4SS.log. O painel registra
+  os dele. A porta de linha continua registrada como antes; a linha
+  `[perf]` do `[debug] perf_log` continua para todos.
+- **`veiculos_listar`**, sem argumentos: uma linha por veículo carregado, com
+  id, classe, posição, perfil do dono, SteamID do dono, trancas e nome.
+  `veiculo;<id>;<classe>;<x>;<y>;<z>;<perfil_dono>;<steamid_dono>;<trancas>;<nome>`
+- Só enxerga veículo carregado em memória (perto de algum jogador). O SteamID
+  vem `0` com o dono offline; o veículo conta como do jogador só com
+  `trancas` > 0.
+- Feito para consulta em laço (30 s; mínimo 10 s): não grava nada em arquivo,
+  nem (pela porta Source) a chamada no `bsbr_scum.log`.
+- **`zona_criar` não recusa mais a zona que entra em outra.** A conferência
+  de invasão da 0.5.5 saiu: o mod só vê círculos e não sabe qual
+  sobreposição é problema (uma zona de "proibido construir" não é; um posto
+  avançado pode ser). A resposta `erro: a zona invadiria "..."` deixou de
+  existir. Quem chama decide, com a lista do `zona_listar`. **Validado em
+  15/11/2026** com uma zona exatamente sobre o Outpost B4; qual regra o jogo
+  aplica dentro da área sobreposta não foi medido.
+- **`anuncio [segundos] <mensagem>`**, comando novo: o aviso do centro da
+  tela para todos. Sem segundos, repassa ao `Announce` do jogo (3 s); com
+  segundos (1 a 60), fica esse tempo. **Validado em 15/11/2026**:
+  `anuncio 15 <frase>` ficou 15 s na tela e o servidor seguiu estável.
+- **`aviso <alvo> [segundos] <mensagem>`**, comando novo: o mesmo aviso só
+  para um jogador conectado (SteamID, id do perfil ou nome); sem segundos,
+  5 s. Resposta `ok aviso enviado a <perfil> (<n> s)`. **Validado em
+  15/11/2026**: amarelo, só para o jogador, frase inteira; SteamID offline
+  respondeu `erro: jogador "..." nao esta conectado`.
+- **`cor:<nome|#RRGGBB>`** no `anuncio` e no `aviso`. **Validado em
+  15/11/2026**: as oito cores e `#8000FF` apareceram na tela na cor pedida,
+  no global e no individual. Opcional, antes da mensagem,
+  em qualquer ordem com os segundos. Nomes `vermelho`, `laranja`, `amarelo`,
+  `verde`, `azul`, `ciano`, `rosa`, `branco`; sem cor, laranja no `anuncio` e
+  amarelo no `aviso`. A resposta só cita a cor quando pedida
+  (`ok anuncio enviado (8 s, cor vermelho)`).
+- **`sonda_aviso`**, diagnóstico: registra no `bsbr_scum.log` o formato de
+  cada aviso do jogo. Só lê; não deixar ligado.
+- **`sonda_morte <segundos>|ler|estado <alvo>`**, diagnóstico, **desligada
+  por padrão**: mostra quais funções do jogo rodam quando um jogador morre.
+  Só existe com `[debug] sonda_morte = 1` no `config.ini` e
+  `HookUObjectProcessEvent = 1` no `UE4SS-settings.ini`; nunca em produção.
+  `estado <alvo>` funciona sempre e é o mesmo que `corpo <alvo>`. Ver
+  [comandos/mod.md](../comandos/mod.md#sonda_morte--o-que-roda-quando-um-jogador-morre-diagnóstico).
+- **Comandos de mundo passam a rodar na thread do jogo.** Até a 0.6 todo
+  comando rodava na thread do laço do UE4SS, em paralelo com o jogo (corrida
+  de dados). Agora os que tocam o jogo (spawn, teleporte, `ListPlayers`,
+  `veiculos_listar`, `zona_*`, `anuncio`, `aviso`, comandos do jogo...) rodam
+  no tick do motor, **um por tick: no máximo ~30 por segundo no total**.
+  `eventos`, `eventos_teste`, `eventos_capturar`, `version` e `sonda_morte ler` não tocam o jogo,
+  rodam na hora fora dela e não entram nessa conta. Tick parado por mais de
+  2 s com comando esperando: `erro: thread do jogo nao respondeu`.
+  **Validado em 15/11/2026** (`executor=jogo`; o erro só apareceu com o
+  servidor a ~5 FPS). Ver
+  [comandos/mod.md](../comandos/mod.md#desempenho).
+- **`version`**: a linha `opcoes` ganhou no fim `executor=jogo|ue4ss`, onde os
+  comandos de mundo estão rodando. `ue4ss` quer dizer que o registro no tick do
+  motor falhou (exige `HookEngineTick = 1`); o mod segue como na 0.6.
+- **`corpo <alvo>`**, comando novo (em teste): efeitos do corpo
+  (`Bleeding`, `Hunger`, `PrisonerBodyEffect_Death`...), último dano e arma
+  de um jogador, para descobrir a causa da morte. Só lê. Ver
+  [comandos/mod.md](../comandos/mod.md#corpo--causa-provável-da-morte-em-teste).
+- **Mudança incompatível: os comandos do mod pelo chat do jogo foram
+  retirados.** `#bsbr <comando>`, `#bsbr @Fulano <comando>` e `#bsbr` sozinho
+  (a ajuda) deixaram de existir. Motivo: com o jogo na 1.3.6.1, o cliente
+  passou a barrar verbos que não conhece; `#bsbr ...` mostra "comando não
+  reconhecido" e nem chega ao servidor (conferido em 15/11/2026). O mod não
+  instala mais o gancho que lia o chat. Os comandos do mod seguem pelas duas
+  portas (painel e terminal), inclusive `as <jogador>` e `@<jogador>`; os
+  comandos do **próprio jogo** pelo chat (`#ListPlayers` etc.) continuam
+  funcionando normalmente.
+- Abreviação: `sonda` sozinho deixou de ser `sonda_aviso` (agora é ambíguo
+  com `sonda_morte`); `co` deixou de ser `commands` (agora é ambíguo com
+  `corpo`).
+- Os outros comandos e respostas não mudaram.
+- Ver [comandos/mod.md](../comandos/mod.md#veiculos_listar--dono-tranca-e-nome-dos-veículos),
+  [comandos/mod.md](../comandos/mod.md#eventos--fila-de-acontecimentos-em-memória)
+  e [comandos/mod.md](../comandos/mod.md#anuncio-e-aviso--aviso-no-centro-da-tela).
 
 ## O que mudou na 0.6.0
 
@@ -192,8 +360,9 @@ no servidor.
 Versão de **sondagem**.
 
 - **`logs/npc_kills.log`**: uma linha por NPC armado morto por jogador, com
-  SteamID, arma e posição. Uma chamada por morte, nada por tick. Ver
-  [comandos/mod.md](../comandos/mod.md#logsnpc_killslog--npc-armado-morto-por-jogador).
+  SteamID, arma e posição. Uma chamada por morte, nada por tick. Substituído
+  na 0.7.0 pelo evento `npc_morto`: ver
+  [comandos/mod.md](../comandos/mod.md#evento-npc_morto-substitui-o-logsnpc_killslog).
 - **`zona_listar`**, comando do mod, só leitura: primeira tentativa de listar
   as zonas personalizadas do jogo (substituída na 0.5.1).
 

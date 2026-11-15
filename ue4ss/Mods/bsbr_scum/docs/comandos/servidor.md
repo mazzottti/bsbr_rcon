@@ -6,11 +6,10 @@ Informação, manutenção e controle de acesso.
 
 🔒 = exige nível Developer, já incluído como `sudo` na linha de uso.
 
-Pelo chat do jogo, troque `scum ` por `#` — os comandos do jogo não usam
-o prefixo `bsbr`, que é só dos [comandos do mod](mod.md).
+Pelo chat do jogo, troque `scum ` por `#` (`#ListPlayers`). Os [comandos do mod](mod.md)
+não entram pelo chat desde a 0.7.0.
 
-Para executar no lugar de outro jogador: `scum as Fulano SpawnItem X` no terminal,
-`#bsbr @Fulano SpawnItem X` no chat.
+Para executar no lugar de outro jogador: `scum as Fulano SpawnItem X`.
 
 > O resumo de cada comando está em português; a explicação de cada
 > argumento e a linha *Original* são o texto da própria Gamepires, lido
@@ -166,6 +165,9 @@ scum ExportQuests
 ```
 
 *Original:* Exports default quest configuration
+
+Testado em 15/11/2026: responde só `ok` e cria seis arquivos em `<servidor>\SCUM\Saved\Config\WindowsServer\Quests\` (`Blocked`, `Override` e `QuestList`, este com `CustomQuestList.json` e `DefaultQuestList.json`).
+Não verificado se sobrescreve um `CustomQuestList.json` já editado: em servidor com quests próprias, copie a pasta `Quests` antes.
 
 ### `GrantElevatedStatus` 🔒
 

@@ -1,7 +1,7 @@
 # bsbr_scum — documentação
 
-**Versão 0.6.0.** Tudo que dá para executar neste servidor: os **233 comandos
-de administração do SCUM** e os **20 comandos do mod**.
+**Versão 0.7.0.** Tudo que dá para executar neste servidor: os **233 comandos
+de administração do SCUM** e os **32 comandos do mod**.
 
 Se é a primeira vez: [orientacoes/conectar.md](orientacoes/conectar.md) ensina a
 mandar o primeiro comando.
@@ -15,15 +15,26 @@ Para saber qual versão está instalada, inclusive com o servidor parado:
 
 | Arquivo | Conteúdo |
 |---|---|
-| [comandos/mod.md](comandos/mod.md) | `get`, `set`, `call`, `sudo`, `@jogador`, `vehicles`, `players` |
+| [comandos/mod.md](comandos/mod.md) | `get`, `set`, `call`, `sudo`, `@jogador`, `vehicles`, `players`; fila de eventos (`eventos`, `eventos_capturar`): morte de NPC armado, morte do jogador com a causa (`zumbi`, `animal`, `queda`, `sangramento`...), renascimento. Zumbi morto por jogador não tem evento: conta-se pelo `SCUM.db` |
 
 Leem e escrevem propriedades dos objetos vivos por reflexão da Unreal, sem passar
-pelo interpretador do jogo. Pelo chat exigem o prefixo `bsbr`.
+pelo interpretador do jogo. Entram pelas portas (painel ou terminal), não pelo
+chat.
+
+## Classes do jogo
+
+| Arquivo | Conteúdo |
+|---|---|
+| [classes.md](classes.md) | Cada classe do SCUM que o mod mapeia, o que ele lê ou chama nela e o comando para usar |
 
 ## Comandos do SCUM
 
 233 comandos, por assunto. Cada entrada traz a linha de chamada pronta e o
 significado de cada argumento, lidos do próprio jogo:
+
+> A documentação por assunto cobre os 233 comandos mapeados na versão 1.3.5
+> do jogo. A 1.3.6.1 carrega 240 (linha `[bsbr_scum] 240 comandos indexados`
+> no log): 7 ainda não documentados.
 
 | Arquivo | Qtd | Conteúdo |
 |---|---|---|
@@ -49,7 +60,7 @@ O que passar como argumento de `SpawnItem`, `SpawnVehicle` e afins:
 
 | Arquivo | Conteúdo |
 |---|---|
-| [orientacoes/conectar.md](orientacoes/conectar.md) | As duas portas, a função `scum` do PowerShell, o chat, e o que cada resposta significa |
+| [orientacoes/conectar.md](orientacoes/conectar.md) | As duas portas, a função `scum` do PowerShell e o que cada resposta significa |
 | [orientacoes/versao.md](orientacoes/versao.md) | Como ler a versão do mod, com o servidor no ar ou parado |
 | [orientacoes/comandos-do-scum.md](orientacoes/comandos-do-scum.md) | Níveis de permissão e como destravar os de nível Developer |
 
@@ -65,16 +76,12 @@ scum as Fulano SpawnItem Weapon_M9   # executando no lugar de outro jogador
 
 ```
 #ListPlayers                           # comando do jogo, pelo chat
-#bsbr vehicles                         # comando do mod, pelo chat
-#bsbr @Fulano SpawnItem Weapon_M9    # no lugar de outro jogador
-#bsbr                                  # a lista dos comandos do mod
 ```
 
-O `#` é o marcador do SCUM; o `bsbr` é o do mod. Comandos do jogo **não** levam
-`bsbr`.
+Pelo chat entram só os comandos do próprio jogo; os do mod, só pelas portas.
 
 No terminal use `as`, não `@`: o PowerShell consome o `@` como splatting antes da
-função receber o argumento. No chat, o `@` é o natural.
+função receber o argumento.
 
 ---
 

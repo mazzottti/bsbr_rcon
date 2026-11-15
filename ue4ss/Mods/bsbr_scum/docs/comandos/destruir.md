@@ -6,11 +6,10 @@ Remover veículos, itens, construções e cadáveres.
 
 🔒 = exige nível Developer, já incluído como `sudo` na linha de uso.
 
-Pelo chat do jogo, troque `scum ` por `#` — os comandos do jogo não usam
-o prefixo `bsbr`, que é só dos [comandos do mod](mod.md).
+Pelo chat do jogo, troque `scum ` por `#` (`#ListPlayers`). Os [comandos do mod](mod.md)
+não entram pelo chat desde a 0.7.0.
 
-Para executar no lugar de outro jogador: `scum as Fulano SpawnItem X` no terminal,
-`#bsbr @Fulano SpawnItem X` no chat.
+Para executar no lugar de outro jogador: `scum as Fulano SpawnItem X`.
 
 > O resumo de cada comando está em português; a explicação de cada
 > argumento e a linha *Original* são o texto da própria Gamepires, lido
@@ -214,6 +213,11 @@ scum DestroyVehicle <Vehicle>
 ```
 
 - `Vehicle` — Vehicle to destroy
+
+A resposta do mod é sempre `ok`, inclusive para id que não existe: o jogo não
+informa se achou o veículo. Funciona também com veículo descarregado (longe de
+todo jogador): testado em 15/11/2026, o veículo saiu do `SCUM.db` em 6 s. Para
+confirmar, veja se o id sumiu de `vehicle_entity` no banco.
 
 *Original:* Destroys vehicle having the specified alias or ID.
 

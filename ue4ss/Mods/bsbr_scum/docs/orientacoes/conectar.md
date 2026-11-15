@@ -4,7 +4,7 @@ O mod tem **duas portas**, as duas só em `127.0.0.1`:
 
 | Porta | Protocolo | Senha | Conexão | Para quem |
 |---|---|---|---|---|
-| **27100** `[api]` | uma linha de texto | não | fecha a cada comando | você no terminal, e o chat |
+| **27100** `[api]` | uma linha de texto | não | fecha a cada comando | você no terminal |
 | **28015** `[source]` | Source RCON | obrigatória | persistente | SSM, painéis, bots, mcrcon |
 
 Os comandos e as respostas são os mesmos nas duas. O que muda é o transporte.
@@ -150,20 +150,12 @@ echo "players" | nc 127.0.0.1 27100
 
 ## Pelo chat do jogo
 
-Não precisa de terminal nenhum. Dentro do jogo, sendo admin:
+Os comandos do mod (`#bsbr ...`) foram retirados do chat na 0.7.0: o cliente do
+jogo 1.3.6.1 passou a barrar verbos que não conhece, e o texto nem chega ao
+servidor. Use o painel ou o terminal. Detalhe em [versao.md](versao.md).
 
-```
-#bsbr players
-#bsbr vehicles
-#bsbr @Fulano SpawnItem Weapon_M9
-#bsbr
-```
-
-A resposta volta no chat, uma linha por mensagem. Diferença que importa: **pelo
-chat, o alvo padrão é quem digitou**; pelo terminal, que não tem remetente, é o
-primeiro jogador vivo.
-
-Comandos do jogo entram pelo chat sem o `bsbr`, do jeito normal: `#ListPlayers`.
+Os comandos do próprio jogo continuam entrando pelo chat normalmente:
+`#ListPlayers`.
 
 ---
 
@@ -205,6 +197,3 @@ Duas formas, ambas mantendo o socket fechado para o mundo:
 **Backend na própria máquina** — o serviço roda ao lado do servidor, fala com o
 socket em loopback, e a autenticação de verdade fica nele. É o desenho natural
 para um painel web.
-
-Pelo chat, o filtro é ser **admin do servidor** — o mesmo nível exigido para
-qualquer comando com `#`.

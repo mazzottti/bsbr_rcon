@@ -1,7 +1,7 @@
 # bsbr_scum — documentação
 
-Tudo que dá para executar neste servidor, por categoria: os **273 comandos de
-administração do SCUM** e os **14 comandos do mod**.
+Tudo que dá para executar neste servidor, por categoria: os **240 comandos de
+administração do SCUM** e os **32 comandos do mod**.
 
 O catálogo do SCUM foi extraído por reflexão do servidor em execução — verbo,
 descrição, número de argumentos e nível de permissão vêm do próprio jogo, não de
@@ -36,16 +36,17 @@ Ver [conectar.md](conectar.md) para a função `scum` do PowerShell.
 
 ### Dois conjuntos de comandos
 
-São **233 comandos do SCUM**, lidos do próprio jogo. O mod acrescenta os seus,
+A documentação por assunto cobre **233 comandos do SCUM**, lidos do próprio
+jogo; o jogo 1.3.6.1 carrega **240**. O mod acrescenta os seus,
 documentados em [comandos/mod.md](../comandos/mod.md) — esses não passam pelo
 interpretador do jogo, leem e escrevem propriedades por reflexão.
 
 Ambos entram pela mesma linha; o mod atende o que reconhece e repassa o resto ao
-jogo. Pelo chat, os do mod exigem o prefixo `bsbr` (`#bsbr vehicles`) e os do
-jogo não (`#ListPlayers`).
+jogo. Pelo chat entram só os do jogo (`#ListPlayers`); os do mod, só pelas
+portas.
 
-O prefixo **`@<jogador>`** funciona com os dois: `#bsbr @Fulano SpawnItem
-Weapon_M9` faz o item cair no Fulano, e não em quem digitou.
+O prefixo **`as <jogador>`** funciona com os dois: `scum as Fulano SpawnItem
+Weapon_M9` faz o item cair no Fulano, e não no primeiro jogador vivo.
 
 ---
 

@@ -30,7 +30,7 @@ saber se há versão nova e instalá-la.
 | **Alvo por jogador** | `as <SteamID> <comando>` executa no contexto daquele jogador (posição, inventário, mira) |
 | **Leitura do servidor** | `players`, `vehicles`, `ListPlayers` montado por leitura de propriedades, sem capturar a saída do jogo |
 | **Zonas de evento** | cria e remove zona personalizada ao vivo, com o nome que o jogador lê ao entrar |
-| **Log de NPC armado** | `logs/npc_kills.log`: quem matou cada guarda, com arma e posição |
+| **Fila de eventos** | `eventos`: acontecimentos em memória para o painel buscar, como quem matou cada guarda, com arma e posição (evento `npc_morto`) |
 | **Brenner** | `DestroyAllBrennersWithinRadius`, que o jogo não tem |
 
 ## Como é feito
@@ -58,6 +58,9 @@ ue4ss/
       config.exemplo.ini           modelo de configuração, sem senha
       docs/                        os 233 comandos do jogo e os do mod
 ```
+
+A documentação por assunto em `docs/` cobre os 233 comandos mapeados na
+versão 1.3.5 do jogo. A 1.3.6.1 carrega 240: 7 ainda não documentados.
 
 `UE4SS.dll` e `main.dll` saem do mesmo build e **são trocados sempre
 juntos**.
@@ -94,6 +97,14 @@ e a lista dos comandos em
 
 ## Para quem integra
 
+### Mudança na 0.7.0: fim do `logs/npc_kills.log`
+
+A partir da 0.7.0 o mod não escreve mais o `logs/npc_kills.log`: a morte de
+NPC armado sai como evento `npc_morto` na fila em memória, buscada com o
+comando `eventos [<ultimo>]` pela porta Source. E os comandos que chegam pela
+porta Source deixam de ser gravados no `bsbr_scum.log`; quem integra registra
+os seus. Formato e protocolo em `ue4ss/Mods/bsbr_scum/docs/comandos/mod.md`.
+
 ### Codificação: UTF-8 a partir da 0.6.0
 
 | Versão do mod | Comando que você envia | Resposta que você recebe |
@@ -121,19 +132,19 @@ vigor (`utf8=1` ou `utf8=0`).
 
 ### Atualização automática
 
-Versão mais recente, em texto puro (`bsbr_scum 0.6.0`):
+Versão mais recente, em texto puro (`bsbr_scum 0.7.0`):
 
 ```
 https://raw.githubusercontent.com/mazzottti/bsbr_rcon/main/ue4ss/Mods/bsbr_scum/version.txt
 ```
 
-Pacote de uma versão (troque `0.6.0` pela versão lida acima):
+Pacote de uma versão (troque `0.7.0` pela versão lida acima):
 
 ```
-https://github.com/mazzottti/bsbr_rcon/archive/refs/tags/v0.6.0.zip
+https://github.com/mazzottti/bsbr_rcon/archive/refs/tags/v0.7.0.zip
 ```
 
-O zip traz tudo sob a pasta `bsbr_rcon-0.6.0/`. Cada tag é imutável: o
+O zip traz tudo sob a pasta `bsbr_rcon-0.7.0/`. Cada tag é imutável: o
 conteúdo de uma versão publicada nunca muda.
 
 Regras para instalar:
@@ -142,7 +153,8 @@ Regras para instalar:
 - copie `dwmapi.dll` e a pasta `ue4ss\` para `<servidor>\SCUM\Binaries\Win64\`;
 - **nunca sobrescreva** `ue4ss\Mods\bsbr_scum\config.ini` (tem a senha); o
   pacote traz só o `config.exemplo.ini`;
-- não apague `zonas.cache`, `zonas.ids`, `logs\` nem `bsbr_scum.log`;
+- não apague `zonas.cache`, `zonas.ids` nem `bsbr_scum.log` (a pasta `logs\`
+  de versões anteriores pode ficar; a 0.7.0 não a usa mais);
 - `UE4SS.dll` e `main.dll` são trocadas sempre juntas;
 - compare versões número a número (`0.5.10` é maior que `0.5.9`) e atualize
   só se a disponível for maior;
