@@ -46,15 +46,18 @@ A abreviação só vale para comandos do mod. Verbos do jogo passam intactos.
 | `veiculos_listar` | Veículos carregados com dono, SteamID, trancas e nome; não grava em log, feito para consulta em laço (validado em 15/11/2026) |
 | `eventos [ultimo]` | Busca a fila de acontecimentos em memória (`npc_morto`...) depois de `ultimo` e descarta até ele; não grava em log (validado em 15/11/2026) |
 | `eventos_teste <n>` | Diagnóstico: põe `n` eventos falsos (1 a 20000) na fila, para teste de carga |
-| `eventos_capturar [padrao\|tudo\|tipo,tipo,...] [minutos]` | Quais mortes entram na fila; fora de `padrao` vence sozinho (1 a 720 min, padrão 120) (compilado, a validar) |
-| `morte_teste <alvo>` | Diagnóstico: põe na fila um `jogador_morto` de um jogador vivo, para conferir os campos (compilado, a validar) |
-| `sonda_funcoes <classe> <segundos>\|ler` | Diagnóstico: quais funções declaradas na classe rodam numa janela de 1 a 120 s; não é para produção (compilado, a validar) |
+| `eventos_capturar [padrao\|tudo\|tipo,tipo,...] [minutos]` | Quais mortes entram na fila; fora de `padrao` vence sozinho (1 a 720 min, padrão 120) (validado em 15/11/2026) |
+| `morte_teste <alvo>` | Diagnóstico: põe na fila um `jogador_morto` de um jogador vivo, para conferir os campos (validado em 15/11/2026) |
+| `sonda_funcoes <classe> <segundos>\|ler` | Diagnóstico: quais funções declaradas na classe rodam numa janela de 1 a 120 s; não é para produção (validado em 15/11/2026) |
 | `get <alvo> [caminho]` | Despeja as propriedades do alvo num arquivo |
 | `set <alvo> <caminho> <valor>` | Escreve uma propriedade |
 | `call <alvo> <função>` | Chama uma função sem parâmetros |
 | `spawn <classe> <x> <y> <z>` | Cria um ator direto pela engine |
 | `sudo <comando>` | Executa um comando de nível Developer |
 | `DestroyAllBrennersWithinRadius [Radius [m]]` | Destrói os Brenners num raio do jogador do `as` (padrão 50 m) |
+| `spawn_area <tipo> <classe\|random> <quantidade> <x> <y> <raio_cm> [<por_segundo>]` | Espalha criaturas (`npc`, `zumbi`, `animal`) num círculo, em ritmo controlado, pelos comandos do jogo (validado em 15/11/2026) |
+| `spawn_area_estado` | Andamento do `spawn_area` atual ou do último (validado em 15/11/2026) |
+| `spawn_area_cancelar` | Para o que falta do `spawn_area`; não remove o que já nasceu (validado em 15/11/2026) |
 | `zona_listar` | Zonas personalizadas que o mod viu passar, com `mod` ou `editor` por região (em teste) |
 | `zona_criar <id> <x> <y> <raio_cm> <configuracao> <titulo>` | Cria ou atualiza a zona circular do `id`; o título é o nome que o jogador lê; aceita zona sobre outra (validado em 15/11/2026) |
 | `zona_remover <id>` | Remove a zona do `id`, e só zona criada pelo mod (validado em 15/11/2026) |
@@ -465,6 +468,107 @@ Mesma forma do `DestroyAllRazorsWithinRadius` do jogo, com duas diferenças:
 Custo: uma passagem pela lista de atores do mundo por chamada, mais três
 chamadas por Brenner destruído. Nada por tick. Serve para limpar depois de um
 evento com `DestroyAllBrennersWithinRadius 2000`.
+
+---
+
+## `spawn_area` — criaturas espalhadas num círculo
+
+**Validado no servidor de dev em 15/11/2026 (0.8.0):** 10 NPCs a 5/s em 3,9 s (`criados=10`); 100 NPCs a 10/s em 12,5 s (`criados=100`, 0 falhas, 30 FPS); cancelamento de 200 zumbis no meio (13 executados). Todos nasceram em pé. Não testados: dentro de cidade, classe escolhida para zumbi e animal, área sobre água.
+
+```
+spawn_area <tipo> <classe|random> <quantidade> <x> <y> <raio_cm> [<por_segundo>]
+spawn_area_estado
+spawn_area_cancelar
+```
+
+Exemplo, 100 guardas numa cidade (raio de 300 m, 10 por segundo):
+
+```
+spawn_area npc BP_Guard_Lvl_1 100 -113084 -70633 30000 10
+ok spawn_area 1 agendado: 100 npc em 10/s
+```
+
+O mod não cria nada sozinho: manda ao jogo, um de cada vez, o comando de
+spawn com quantidade 1 e `Location` sorteado no círculo, pelo mesmo caminho dos
+comandos do jogo na porta Source (nível destravado):
+
+| `tipo` | `classe` | Comando do jogo |
+|---|---|---|
+| `npc` | obrigatória (ex. `BP_Guard_Lvl_1`) | `SpawnArmedNPC <classe> 1 Location "{...}"` |
+| `zumbi` | classe ou `random` | `SpawnZombie <classe> 1 ...` / `SpawnRandomZombie 1 ...` |
+| `animal` | classe ou `random` | `SpawnAnimal <classe> 1 ...` / `SpawnRandomAnimal 1 ...` |
+
+- `quantidade` 1 a 500; `x`, `y` em cm (até ±10000000); `raio_cm` 100 a
+  150000 (1,5 km); `por_segundo` 1 a 20, padrão 10.
+- A classe só é conferida na forma (1 a 64 de `[A-Za-z0-9_]`): o mod não sabe
+  se ela existe. Classe errada aparece como `criados=0` e `nada_nasceu`.
+- **Altura**: o chão de cada ponto, achado por um traço vertical
+  (`LineTraceSingle`, canal Visibility) de 500 m acima a 500 m abaixo do
+  jogador mais perto, + 3 m. O primeiro obstáculo conta como chão: telhado,
+  copa de árvore e rocha também. Sem impacto, o ponto conta como falha e não
+  é executado. O jogo recusa Z dentro do terreno, e com Z alto demais a
+  criatura cai e se fere (medido com Z do jogador + 30 m).
+- **Distância**: o jogo só cria a até ~1 km de um jogador. O comando exige um
+  jogador a até 1 km do centro; ponto sorteado sem jogador a até 1 km conta
+  como falha e não é executado.
+- **Ritmo**: no máximo `por_segundo` por segundo e um por tick, só nos ticks
+  em que nenhum comando das portas está esperando (os comandos do painel têm
+  prioridade). Um trabalho por vez.
+- **Conferência**: o jogo recusa em silêncio, então o mod conta, a cada
+  segundo, os atores da classe nativa do tipo (`ArmedNPCBase`, `Zombie2`,
+  `Animal`) a até raio + 1 km do centro e subtrai os que havia antes.
+  **`criados` é estimativa**: criaturas morrem, andam (hostis vão atrás do
+  jogador) e o zumbi kamikaze do `random` explode os vizinhos.
+- **Fim**: executou `quantidade` (`concluido`; o jogo cria com atraso, então
+  o mod espera a contagem alcançar os executados, até 10 s depois do último),
+  `spawn_area_cancelar` (`cancelado`), 20 executados e `criados=0` 5 s depois
+  do 20º (`nada_nasceu`), ou 15 s sem conseguir executar (`sem_jogador`).
+
+### Respostas
+
+| Situação | Resposta |
+|---|---|
+| Aceito | `ok spawn_area <id> agendado: <quantidade> <tipo> em <por_segundo>/s` (`id` recomeça em 1 a cada subida) |
+| Argumento faltando ou a mais | `erro: uso spawn_area <tipo> <classe\|random> <quantidade> <x> <y> <raio_cm> [<por_segundo>]` |
+| `meca`, `sentinela`, `robo`, `drone` | `erro: tipo sem spawn` |
+| Outro tipo | `erro: tipo desconhecido '<tipo>'; tipos: npc, zumbi, animal` |
+| `npc random` | `erro: npc exige a classe` |
+| Classe com caractere inválido | `erro: classe invalida (1 a 64 caracteres, so letras, numeros e _)` |
+| Fora da faixa | `erro: quantidade de 1 a 500`, `erro: x e y em cm, de -10000000 a 10000000`, `erro: raio_cm de 100 a 150000`, `erro: por_segundo de 1 a 20` |
+| Já há um em andamento | `erro: ja ha um spawn_area em andamento (use spawn_area_estado ou spawn_area_cancelar)` |
+| Sem jogador perto | `erro: nenhum jogador a ate 1 km do centro; o jogo nao cria em area sem jogador por perto` |
+| Traço de altura com assinatura diferente (patch do jogo) | `erro: sem traco de altura do chao (<motivo>); nada agendado` |
+
+```
+spawn_area_estado
+spawn_area: 1 em_andamento tipo=npc classe=BP_Guard_Lvl_1 pedidos=100 executados=37 criados=35 falhas=0 por_segundo=10
+
+spawn_area_cancelar
+ok spawn_area 1 cancelado (executados 37 de 100)
+```
+
+Sem nenhum trabalho desde a subida: `spawn_area: nenhum`. Nada em andamento:
+`ok nada a cancelar`. Cancelar **não remove** o que já nasceu.
+
+### Evento final
+
+Ao terminar, uma linha na fila [`eventos`](#eventos--fila-de-acontecimentos-em-memória)
+(entra sempre, não depende de `eventos_capturar`):
+
+```
+<seq>;<hora>;spawn_area;<id>;<tipo>;<classe>;<pedidos>;<executados>;<criados>;<falhas>;<concluido|cancelado|nada_nasceu|sem_jogador>
+```
+
+> **Remover depois do evento: cuidado com os comandos do jogo.**
+> `DestroyArmedNPCsWithinRadius`, `DestroyZombiesWithinRadius` e
+> `DestroyAllAnimalsWithinRadius` têm o raio em **metros** e a posição no
+> formato `"{X=<x> Y=<y> Z=<z>|P=0 Y=0 R=0}"` (SteamID dá `Failed to parse
+> location string`). **`DestroyAllAnimalsWithinRadius` com raio grande apagou
+> a fauna do mapa inteiro** (106 criados + 1555 virtuais).
+
+Custo: sem trabalho, nada. Com trabalho, um traço vertical e um spawn a cada `1/por_segundo` s
+(0,39 a 0,52 ms medidos por comando do jogo) e uma contagem da classe nativa
+por segundo. 50 NPCs armados criados um por comando: FPS estável em 30.
 
 ---
 

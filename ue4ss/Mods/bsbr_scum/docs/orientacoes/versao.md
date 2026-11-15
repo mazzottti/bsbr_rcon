@@ -1,6 +1,6 @@
 # Versão do mod
 
-A versão atual é **0.7.0**. Ela pode ser lida de três formas, e as três sempre
+A versão atual é **0.8.0**. Ela pode ser lida de três formas, e as três sempre
 concordam, porque o número nasce num lugar só no código e é carimbado nos três
 na hora de compilar.
 
@@ -17,7 +17,7 @@ version
 ```
 
 ```
-bsbr_scum 0.7.0
+bsbr_scum 0.8.0
 portas source=28015 linha=27100
 opcoes elevate=1 split_replies=0 echo=0 utf8=1 perf_log=0 executor=jogo
 ```
@@ -28,7 +28,7 @@ momento. A senha nunca aparece.
 Para um gerenciador externo, é uma chamada igual a qualquer outra:
 
 ```python
-versao = client.send_command("version").splitlines()[0]   # "bsbr_scum 0.7.0"
+versao = client.send_command("version").splitlines()[0]   # "bsbr_scum 0.8.0"
 ```
 
 ## Com o servidor parado
@@ -40,7 +40,7 @@ ue4ss\Mods\bsbr_scum\version.txt
 ```
 
 ```
-bsbr_scum 0.7.0
+bsbr_scum 0.8.0
 carregado 2026-10-15 00:31:04
 ```
 
@@ -66,10 +66,38 @@ binário está rodando atrapalha mais do que ajuda, então a versão fica fora d
 
 ---
 
+## O que mudou na 0.8.0
+
+**Validado no servidor de dev em 15/11/2026:** 100 NPCs a 10/s em 12,5 s, todos em pé, 30 FPS; cancelamento e evento final conferidos.
+
+- **`spawn_area <tipo> <classe|random> <quantidade> <x> <y> <raio_cm> [<por_segundo>]`**,
+  comando novo: espalha criaturas num círculo, em ritmo controlado, pelos
+  comandos do próprio jogo, um por comando, com ponto sorteado no círculo.
+  Tipos `npc` (exige a classe, ex. `BP_Guard_Lvl_1`), `zumbi` e `animal`
+  (classe ou `random`). Robô (sentinela) e drone não têm comando de spawn no
+  jogo: `erro: tipo sem spawn`. Exemplo, 100 guardas numa cidade:
+  `spawn_area npc BP_Guard_Lvl_1 100 -113084 -70633 30000 10`.
+- Responde na hora `ok spawn_area <id> agendado: ...` e vai criando, no máximo
+  `por_segundo` por segundo (1 a 20, padrão 10), só nos ticks em que nenhum
+  comando das portas espera. Um trabalho por vez.
+- O jogo só cria perto de jogador (até 1 km) e com altura perto do terreno, e
+  recusa em silêncio. Por isso o mod exige um jogador a até 1 km do centro,
+  acha o chão de cada ponto com um traço vertical (`LineTraceSingle`) e cria
+  3 m acima dele, e confere por contagem: `criados`
+  é **estimativa** (criaturas morrem e andam). Se nada nascer depois de 20
+  spawns, para sozinho (`nada_nasceu`).
+- **`spawn_area_estado`** e **`spawn_area_cancelar`**, comandos novos; o fim
+  vira o evento `spawn_area` na fila `eventos` (entra sempre, não depende de
+  `eventos_capturar`).
+- Abreviação: `spa`/`spaw` deixaram de ser `spawn` (agora são ambíguos com os
+  três `spawn_area*`). `spawn` por extenso não mudou.
+- Os outros comandos e respostas não mudaram.
+- Ver [comandos/mod.md](../comandos/mod.md#spawn_area--criaturas-espalhadas-num-círculo-em-teste).
+
 ## O que mudou na 0.7.0
 
 Estado final depois dos testes da build final no servidor de desenvolvimento
-em 15/11/2026. **Ainda não publicada**: quem está em produção usa a 0.6.0.
+em 15/11/2026. Publicada em 15/11/2026.
 
 **Validado:**
 
